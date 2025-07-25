@@ -1,0 +1,643 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>适配移动设备的提字器</title>
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 全局样式 */
+        html {
+            height: 100%;
+        }
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            min-height: 100%;
+            padding: 10px;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* 主容器 */
+        .teleprompter {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px 0;
+        }
+
+        /* 文本输入区域 */
+        .text-input {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #444;
+            border-radius: 8px;
+        }
+
+        .text-input__label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .text-input__textarea {
+            width: 100%;
+            height: 100px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 12px;
+            resize: none;
+            -webkit-appearance: none;
+            font-size: 15px;
+        }
+
+        .text-input__button {
+            padding: 10px 20px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+
+        .text-input__button:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        /* 主控制按钮区域 */
+        .controls {
+            display: -webkit-box;
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            width: 100%;
+        }
+
+        .controls__button {
+            -webkit-box-flex: 1;
+            flex: 1;
+            padding: 15px 5px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .controls__button:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .controls__button--start {
+            background-color: #34c759;
+        }
+
+        .controls__button--pause {
+            background-color: #ff9500;
+        }
+
+        .controls__button--reset {
+            background-color: #ff3b30;
+        }
+
+        /* 文本显示区域 */
+        .display {
+            height: calc(100vh - 400px);
+            min-height: 150px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .display__container {
+            width: 96%;
+            margin: 0 auto;
+            padding: 10px 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .display__content {
+            font-size: 24px;
+            transition: transform 0.1s linear;
+            line-height: 1.8;
+        }
+
+        /* 字体控制区域 */
+        .font-settings {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .font-settings__label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .font-settings__buttons {
+            display: -webkit-box;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .font-settings__button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #5856d6;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .font-settings__button:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .font-settings__range-container {
+            margin-top: 10px;
+        }
+
+        .font-settings__range {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #555;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .font-settings__range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .font-settings__value {
+            font-size: 14px;
+            color: #ddd;
+            margin-top: 5px;
+        }
+
+        /* 速度控制区域 */
+        .speed-settings {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .speed-settings__label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .speed-settings__range {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #555;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .speed-settings__range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .speed-settings__value {
+            display: inline-block;
+        }
+
+        /* 信息区域 */
+        .info {
+            text-align: center;
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* 自定义弹窗 */
+        .alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            text-align: center;
+            min-width: 280px;
+        }
+
+        .alert__message {
+            margin-bottom: 15px;
+        }
+
+        .alert__button {
+            padding: 8px 16px;
+            background-color: #007aff;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* 响应式设计 - 小屏幕 */
+        @media screen and (max-width: 375px) {
+            .display {
+                height: calc(100vh - 450px);
+            }
+
+            .display__content {
+                font-size: 20px;
+            }
+        }
+
+        /* 响应式设计 - 横屏 */
+        @media screen and (orientation: landscape) {
+            .display {
+                height: calc(100vh - 250px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="teleprompter">
+        <!-- 文本输入区域 -->
+        <section class="text-input">
+            <label class="text-input__label" for="textInput">输入文本内容（或粘贴）：</label>
+            <textarea id="textInput" class="text-input__textarea" placeholder="请输入或粘贴需要滚动的文本..."></textarea>
+            <button type="button" id="loadTextBtn" class="text-input__button">加载文本</button>
+        </section>
+
+        <!-- 主控制按钮 -->
+        <section class="controls">
+            <button type="button" class="controls__button controls__button--start" id="mainStartBtn">开始</button>
+            <button type="button" class="controls__button controls__button--pause" id="mainPauseBtn">暂停</button>
+            <button type="button" class="controls__button controls__button--reset" id="mainResetBtn">复位</button>
+        </section>
+
+        <!-- 文本显示区域 -->
+        <section class="display">
+            <div class="display__container">
+                <div class="display__content" id="textContent">
+                    请输入文本并点击"加载文本"<br><br>
+                    提示：按空格键开始/暂停
+                </div>
+            </div>
+        </section>
+
+        <!-- 字体控制区域 -->
+        <section class="font-settings">
+            <label class="font-settings__label">字体大小</label>
+            <div class="font-settings__buttons">
+                <button type="button" class="font-settings__button" id="fontSmaller">A-</button>
+                <button type="button" class="font-settings__button" id="fontDefault">默认</button>
+                <button type="button" class="font-settings__button" id="fontLarger">A+</button>
+            </div>
+            <div class="font-settings__range-container">
+                <input type="range" id="fontSizeRange" class="font-settings__range" min="12" max="60" value="24">
+                <div class="font-settings__value">当前大小: <span id="fontSizeValue">24</span></div>
+            </div>
+        </section>
+
+        <!-- 速度控制区域 -->
+        <section class="speed-settings">
+            <label class="speed-settings__label">
+                滚动速度: <span id="speedValue" class="speed-settings__value">30</span>
+            </label>
+            <input type="range" id="speedRange" class="speed-settings__range" min="5" max="100" value="30">
+        </section>
+
+        <!-- 信息区域 -->
+        <footer class="info">
+            适配移动设备浏览器<br>
+            建议：若有问题，尝试使用系统默认浏览器打开
+        </footer>
+    </main>
+
+    <script>
+        // 使用模块模式封装提字器功能，避免全局变量污染
+        const Teleprompter = (function() {
+            // DOM元素缓存
+            const elements = {
+                textContent: document.getElementById('textContent'),
+                textDisplay: document.querySelector('.display'),
+                textInput: document.getElementById('textInput'),
+                loadTextBtn: document.getElementById('loadTextBtn'),
+                speedRange: document.getElementById('speedRange'),
+                speedValue: document.getElementById('speedValue'),
+                fontSizeRange: document.getElementById('fontSizeRange'),
+                fontSizeValue: document.getElementById('fontSizeValue'),
+                fontSmallerBtn: document.getElementById('fontSmaller'),
+                fontDefaultBtn: document.getElementById('fontDefault'),
+                fontLargerBtn: document.getElementById('fontLarger'),
+                mainStartBtn: document.getElementById('mainStartBtn'),
+                mainPauseBtn: document.getElementById('mainPauseBtn'),
+                mainResetBtn: document.getElementById('mainResetBtn')
+            };
+
+            // 配置和状态变量
+            const state = {
+                isScrolling: false,
+                scrollSpeed: 30,
+                fontSize: 24,
+                defaultFontSize: 24,
+                currentY: 0,
+                animationId: null,
+                touchStartY: 0,
+                isDragging: false
+            };
+
+            // 初始化函数
+            function init() {
+                setupEventListeners();
+                updateFontSize();
+                resetScroll();
+            }
+
+            // 设置所有事件监听器
+            function setupEventListeners() {
+                // 速度控制
+                elements.speedRange.addEventListener('input', handleSpeedChange);
+
+                // 字体大小控制
+                elements.fontSizeRange.addEventListener('input', handleFontSizeRangeChange);
+                elements.fontSmallerBtn.addEventListener('click', handleFontSmaller);
+                elements.fontDefaultBtn.addEventListener('click', handleFontDefault);
+                elements.fontLargerBtn.addEventListener('click', handleFontLarger);
+
+                // 文本加载
+                elements.loadTextBtn.addEventListener('click', handleLoadText);
+
+                // 主控制按钮
+                elements.mainStartBtn.addEventListener('click', startScroll);
+                elements.mainPauseBtn.addEventListener('click', pauseScroll);
+                elements.mainResetBtn.addEventListener('click', resetScroll);
+
+                // 键盘快捷键
+                document.addEventListener('keydown', handleKeyDown);
+
+                // 触摸事件
+                elements.textDisplay.addEventListener('touchstart', handleTouchStart, { passive: true });
+                elements.textDisplay.addEventListener('touchmove', handleTouchMove, { passive: true });
+                elements.textDisplay.addEventListener('touchend', handleTouchEnd);
+
+                // 屏幕旋转事件
+                window.addEventListener('orientationchange', handleOrientationChange);
+            }
+
+            // 事件处理函数 - 速度改变
+            function handleSpeedChange() {
+                state.scrollSpeed = parseInt(this.value);
+                elements.speedValue.textContent = state.scrollSpeed;
+            }
+
+            // 事件处理函数 - 字体大小滑块改变
+            function handleFontSizeRangeChange() {
+                state.fontSize = parseInt(this.value);
+                updateFontSize();
+            }
+
+            // 事件处理函数 - 字体减小
+            function handleFontSmaller() {
+                if (state.fontSize > 12) {
+                    state.fontSize -= 2;
+                    updateFontSize();
+                }
+            }
+
+            // 事件处理函数 - 字体默认
+            function handleFontDefault() {
+                state.fontSize = state.defaultFontSize;
+                updateFontSize();
+            }
+
+            // 事件处理函数 - 字体增大
+            function handleFontLarger() {
+                if (state.fontSize < 60) {
+                    state.fontSize += 2;
+                    updateFontSize();
+                }
+            }
+
+            // 事件处理函数 - 加载文本
+            function handleLoadText() {
+                const text = elements.textInput.value.trim();
+                if (text) {
+                    elements.textContent.innerHTML = text.replace(/\n/g, '<br>');
+                    resetScroll();
+                } else {
+                    showAlert('请输入文本内容');
+                }
+            }
+
+            // 事件处理函数 - 键盘按下
+            function handleKeyDown(e) {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    state.isScrolling ? pauseScroll() : startScroll();
+                }
+            }
+
+            // 事件处理函数 - 触摸开始
+            function handleTouchStart(e) {
+                if (state.isScrolling) {
+                    pauseScroll();
+                }
+                state.touchStartY = e.touches[0].clientY;
+                state.isDragging = true;
+            }
+
+            // 事件处理函数 - 触摸移动
+            function handleTouchMove(e) {
+                if (!state.isDragging) return;
+                const touchY = e.touches[0].clientY;
+                const diff = touchY - state.touchStartY;
+                
+                // 缓慢拖动
+                state.currentY += diff / 5;
+                elements.textContent.style.transform = `translateY(${state.currentY}px)`;
+                
+                state.touchStartY = touchY;
+            }
+
+            // 事件处理函数 - 触摸结束
+            function handleTouchEnd() {
+                state.isDragging = false;
+            }
+
+            // 事件处理函数 - 屏幕旋转
+            function handleOrientationChange() {
+                // 延迟执行，确保DOM已更新
+                setTimeout(() => {
+                    // 如果正在滚动，重新开始以适应新尺寸
+                    if (state.isScrolling) {
+                        pauseScroll();
+                        startScroll();
+                    }
+                }, 300);
+            }
+
+            // 更新字体大小
+            function updateFontSize() {
+                elements.fontSizeRange.value = state.fontSize;
+                elements.fontSizeValue.textContent = state.fontSize;
+                elements.textContent.style.fontSize = `${state.fontSize}px`;
+            }
+
+            // 动画帧请求函数，带降级处理
+            const requestAnimFrame = (function() {
+                return window.requestAnimationFrame ||
+                       window.webkitRequestAnimationFrame ||
+                       function(callback) {
+                           return setTimeout(callback, 16);
+                       };
+            })();
+
+            // 取消动画帧函数，带降级处理
+            const cancelAnimFrame = (function() {
+                return window.cancelAnimationFrame ||
+                       window.webkitCancelAnimationFrame ||
+                       function(id) {
+                           clearTimeout(id);
+                       };
+            })();
+
+            // 开始滚动
+            function startScroll() {
+                if (state.isScrolling) return;
+                state.isScrolling = true;
+                
+                const moveDistance = state.scrollSpeed / 10;
+                const displayHeight = elements.textDisplay.offsetHeight;
+                let lastTime = 0;
+                
+                function scrollStep(timestamp) {
+                    if (!state.isScrolling) return;
+                    
+                    // 控制滚动帧率
+                    if (!lastTime || timestamp - lastTime > 50) {
+                        const contentHeight = elements.textContent.offsetHeight;
+                        // 计算文本行高以确定合适的余量
+                        const lineHeight = parseInt(window.getComputedStyle(elements.textContent).lineHeight);
+                        const maxScroll = displayHeight - contentHeight - lineHeight;
+                        
+                        if (state.currentY > maxScroll) {
+                            state.currentY -= moveDistance;
+                            elements.textContent.style.transform = `translateY(${state.currentY}px)`;
+                        } else {
+                            pauseScroll();
+                            return;
+                        }
+                        lastTime = timestamp;
+                    }
+                    
+                    state.animationId = requestAnimFrame(scrollStep);
+                }
+                
+                state.animationId = requestAnimFrame(scrollStep);
+            }
+
+            // 暂停滚动
+            function pauseScroll() {
+                if (!state.isScrolling) return;
+                state.isScrolling = false;
+                if (state.animationId) {
+                    cancelAnimFrame(state.animationId);
+                    state.animationId = null;
+                }
+            }
+
+            // 复位滚动
+            function resetScroll() {
+                pauseScroll();
+                state.currentY = 0;
+                elements.textContent.style.transform = 'translateY(0)';
+            }
+
+            // 显示自定义弹窗
+            function showAlert(message) {
+                // 移除已存在的弹窗
+                const existingAlert = document.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新弹窗
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert';
+                alertDiv.innerHTML = `
+                    <p class="alert__message">${message}</p>
+                    <button type="button" class="alert__button">确定</button>
+                `;
+                
+                document.body.appendChild(alertDiv);
+                
+                // 确定按钮事件
+                alertDiv.querySelector('.alert__button').addEventListener('click', function() {
+                    alertDiv.remove();
+                });
+            }
+
+            // 暴露公共方法
+            return {
+                init: init,
+                start: startScroll,
+                pause: pauseScroll,
+                reset: resetScroll
+            };
+        })();
+
+        // 初始化提字器
+        document.addEventListener('DOMContentLoaded', function() {
+            Teleprompter.init();
+        });
+    </script>
+</body>
+</html>
+    
